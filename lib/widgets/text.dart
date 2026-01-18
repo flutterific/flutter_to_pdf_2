@@ -48,7 +48,7 @@ extension TextSpanConverter on TextSpan {
       children: await Future.wait(children?.map(
         (InlineSpan e) async {
           if (e is WidgetSpan) {
-            return await e.toPdfWidget(instance);
+            return await e.toPdfWidget(instance, parentFontSize: style?.fontSize);
           }
           return await (e as TextSpan).toPdfWidget(instance);
         }
@@ -59,9 +59,14 @@ extension TextSpanConverter on TextSpan {
 /// Extension on [WidgetSpan] to convert it to the pdf equivalent [pw.WidgetSpan].
 extension WidgetSpanConverter on WidgetSpan {
   /// Converts the [WidgetSpan] to a [pw.WidgetSpan].
-  Future<pw.WidgetSpan> toPdfWidget(ExportInstance instance) async {
+  /// 
+  /// [parentFontSize] is the font size of the parent [TextSpan], used to calculate
+  /// the baseline offset (1.2 * fontSize) for proper vertical alignment.
+  Future<pw.WidgetSpan> toPdfWidget(ExportInstance instance, {double? parentFontSize}) async {
     final pw.Widget pdfChild = await instance.exportFunc(child);
-    return pw.WidgetSpan(child: pdfChild);
+    // Calculate baseline as 1.2 * parent font size, default to 14.0 if not provided
+    final baseline = - (parentFontSize ?? 14.0) * 1.3;
+    return pw.WidgetSpan(child: pdfChild, baseline: baseline);
   }
 }
 
